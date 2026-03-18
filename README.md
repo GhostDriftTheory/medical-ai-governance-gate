@@ -1,5 +1,9 @@
 # Medical AI Governance Gate Demo
 
+<p align="center">
+  <img src="Medical AI Governance Gate Protect–Then–Release Flow.png" width="720">
+</p>
+
 A concept demo of a **medical AI governance gate** that prevents AI-generated candidates from being used as-is.
 
 This demo visualizes a simple flow:
@@ -8,6 +12,14 @@ This demo visualizes a simple flow:
 
 > **Note:** The current UI is designed in **Japanese**.  
 > The repository and README can be used internationally, but the on-screen interface text is currently Japanese-first.
+
+---
+
+## Related links
+
+- **Project page:** [medical-ai-governance-gate](https://github.com/GhostDriftTheory/medical-ai-governance-gate)
+- **Preprint:** [https://zenodo.org/records/18897322](https://zenodo.org/records/18897322)
+- **Organization:** [GhostDrift Mathematical Institute](https://ghostdriftresearch.com/)
 
 ---
 
