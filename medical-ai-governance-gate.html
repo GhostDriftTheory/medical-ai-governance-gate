@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ADIC 安全チェック Gate Demo</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --panel-2: #f8fafc;
+      --text: #0f172a;
+      --muted: #475569;
+      --line: #dbe3ee;
+      --brand: #0f766e;
+      --brand-soft: #e6fffb;
+      --danger: #b91c1c;
+      --danger-soft: #fef2f2;
+      --warn: #92400e;
+      --warn-soft: #fff7ed;
+      --ok: #166534;
+      --ok-soft: #f0fdf4;
+      --shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+      color: var(--text);
+      font-family: Inter, "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    .wrap {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      background:
+        radial-gradient(circle at top right, rgba(15,118,110,0.14), transparent 28%),
+        radial-gradient(circle at left center, rgba(59,130,246,0.10), transparent 22%),
+        linear-gradient(135deg, #ffffff 0%, #f8fbfd 100%);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -80px -80px auto;
+      width: 220px;
+      height: 220px;
+      background: radial-gradient(circle, rgba(15,118,110,0.18) 0%, rgba(15,118,110,0.00) 72%);
+      pointer-events: none;
+    }
+
+    .kicker {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid #bfe8e3;
+      color: var(--brand);
+      background: var(--brand-soft);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    h1 {
+      margin: 14px 0 10px;
+      font-size: clamp(28px, 4vw, 52px);
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      max-width: 900px;
+    }
+
+    .lead {
+      max-width: 900px;
+      color: var(--muted);
+      font-size: 17px;
+      margin-bottom: 18px;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .flow-card {
+      background: rgba(255,255,255,0.76);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      min-height: 115px;
+    }
+
+    .flow-card strong {
+      display: block;
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 330px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      padding: 18px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .section-title h2, .section-title h3 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .case-list {
+      display: grid;
+      gap: 10px;
+      margin: 14px 0 18px;
+    }
+
+    .case-btn {
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 16px;
+      padding: 14px;
+      cursor: pointer;
+      transition: .18s ease;
+    }
+
+    .case-btn:hover { transform: translateY(-1px); border-color: #b8c8da; }
+    .case-btn.active {
+      border-color: #7dd3c7;
+      box-shadow: inset 0 0 0 1px #7dd3c7;
+      background: linear-gradient(180deg, #fcfffe 0%, #f4fffd 100%);
+    }
+
+    .case-btn .name {
+      font-weight: 700;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .pill-row, .quick-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      color: var(--text);
+    }
+
+    .legend {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+      display: grid;
+      gap: 10px;
+    }
+
+    .legend-item {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+    }
+
+    .main {
+      display: grid;
+      gap: 20px;
+    }
+
+    .top-summary {
+      padding: 20px;
+    }
+
+    .top-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .metric .value {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 20px;
+    }
+
+    .stack {
+      display: grid;
+      gap: 20px;
+    }
+
+    .block {
+      padding: 20px;
+    }
+
+    .candidate-list {
+      display: grid;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .candidate {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      background: linear-gradient(180deg, #fff 0%, #fbfdff 100%);
+      transition: .18s ease;
+    }
+
+    .candidate.selected {
+      border-color: #7dd3c7;
+      box-shadow: 0 0 0 1px #7dd3c7;
+    }
+
+    .candidate-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: start;
+      margin-bottom: 10px;
+    }
+
+    .candidate-title {
+      font-size: 17px;
+      font-weight: 800;
+      margin: 0 0 4px;
+    }
+
+    .candidate-sub {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .score {
+      text-align: right;
+      min-width: 110px;
+    }
+
+    .score .n {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .score .s {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 800;
+      border: 1px solid transparent;
+      min-width: 95px;
+    }
+
+    .pass { background: var(--ok-soft); color: var(--ok); border-color: #b7e4c4; }
+    .block-badge { background: var(--danger-soft); color: var(--danger); border-color: #f3b7b7; }
+    .review { background: var(--warn-soft); color: var(--warn); border-color: #f0cf9c; }
+
+    .reason-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .gate-check {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: #fff;
+      min-height: 110px;
+    }
+
+    .gate-check h4 {
+      margin: 0 0 7px;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .gate-check p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .mini-tag {
+      font-size: 11px;
+      font-weight: 800;
+      border-radius: 999px;
+      padding: 4px 8px;
+      border: 1px solid var(--line);
+    }
+
+    .ok-tag { color: var(--ok); background: var(--ok-soft); border-color: #b7e4c4; }
+    .bad-tag { color: var(--danger); background: var(--danger-soft); border-color: #f3b7b7; }
+    .warn-tag { color: var(--warn); background: var(--warn-soft); border-color: #f0cf9c; }
+
+    .audit-timeline {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .audit-item {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: 14px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(180deg, #fff 0%, #fbfdff 100%);
+    }
+
+    .audit-time {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--brand);
+    }
+
+    .audit-body strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .audit-body div {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .diagram {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .diagram-box {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      background: #fff;
+      position: relative;
+      min-height: 140px;
+    }
+
+    .diagram-box strong {
+      display: block;
+      margin-bottom: 7px;
+    }
+
+    .diagram-box::after {
+      content: "→";
+      position: absolute;
+      top: 50%;
+      right: -12px;
+      transform: translateY(-50%);
+      font-size: 24px;
+      color: #94a3b8;
+    }
+
+    .diagram-box:last-child::after { display: none; }
+
+    .footer-note {
+      margin-top: 18px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .mini-note {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .mini-note summary {
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+    }
+
+    .mini-note summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .mini-note summary::before {
+      content: "注釈を表示";
+    }
+
+    .mini-note[open] summary::before {
+      content: "注釈を閉じる";
+    }
+
+    .mini-note .mini-note-body {
+      margin-top: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      line-height: 1.6;
+    }
+
+    button.primary {
+      appearance: none;
+      border: none;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #0f766e 0%, #0f9c90 100%);
+      color: white;
+      padding: 12px 18px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 12px 24px rgba(15, 118, 110, 0.18);
+      transition: transform .18s ease;
+    }
+
+    button.primary:hover { transform: translateY(-1px); }
+
+    .subtle-btn {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 1120px) {
+      .grid, .two-col { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+      .top-cards, .flow, .diagram, .reason-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 760px) {
+      .wrap { padding: 14px; }
+      .flow, .top-cards, .diagram, .reason-grid { grid-template-columns: 1fr; }
+      .audit-item { grid-template-columns: 1fr; }
+      .candidate-top { flex-direction: column; }
+      .score { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero panel">
+      <span class="kicker">医療AIガバナンス・デモ</span>
+      <h1>AI候補をそのまま使わせない<br>医療ガバナンス技術</h1>
+      <p class="lead">
+        これは薬剤チェック画面ではありません。AIが出した候補を、そのまま使ってよいか確認する医療AIガバナンスのデモです。<br>
+        ADIC は、その確認と記録を担う中核です。大事なのは、AIが候補を出せることではなく、<strong>危ない候補を止め、判断が足りない候補を人に戻し、通してよいものだけを前に進めること</strong>です。
+      </p>
+      <div class="flow">
+        <div class="flow-card">
+          <strong>1. AIが候補を出す</strong>
+            患者情報をもとに候補を出す。<br>
+            ただし、この時点ではまだそのまま使わない。
+        </div>
+   <div class="flow-card">
+          <strong>2. ADICが安全チェックする</strong>
+            禁忌、相互作用、腎機能、アレルギー、情報不足を確認する。<br>
+            その結果を PASS / BLOCK / REVIEW に分ける。
+        </div>
+   <div class="flow-card">
+          <strong>3. 理由を記録する</strong>
+            なぜ止めたか、何が未確認か、何を人が見るべきかを残す。<br>
+            後から説明できる状態にする。
+        </div>
+      </div>
+    </section>
+
+    <div class="grid">
+      <aside class="panel sidebar">
+        <div class="section-title">
+          <h2>症例シナリオ</h2>
+          <span class="muted">クリックで切替</span>
+        </div>
+        <div class="case-list" id="caseList"></div>
+
+        <div class="legend">
+          <div class="legend-item"><span class="dot" style="background:#16a34a"></span>PASS：そのまま進めてよい候補。</div>
+          <div class="legend-item"><span class="dot" style="background:#dc2626"></span>BLOCK：危険なので止める候補。</div>
+          <div class="legend-item"><span class="dot" style="background:#d97706"></span>REVIEW：情報不足のため、人が確認する候補。</div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <section class="panel top-summary">
+          <div class="section-title">
+            <div>
+              <h2 id="patientTitle">症例と安全チェック条件</h2>
+              <div class="muted" id="patientSubtitle"></div>
+            </div>
+            <button class="primary" id="runGateBtn">安全チェックを実行</button>
+          </div>
+          <div class="quick-info" id="patientFacts"></div>
+          <div class="top-cards">
+            <div class="metric">
+              <div class="label">未解放候補数</div>
+              <div class="value" id="metricCandidates">0</div>
+            </div>
+            <div class="metric">
+              <div class="label">PASS</div>
+              <div class="value" id="metricPass">0</div>
+            </div>
+            <div class="metric">
+              <div class="label">BLOCK</div>
+              <div class="value" id="metricBlock">0</div>
+            </div>
+            <div class="metric">
+              <div class="label">REVIEW</div>
+              <div class="value" id="metricReview">0</div>
+            </div>
+          </div>
+        </section>
+
+        <div class="two-col">
+          <div class="stack">
+            <section class="panel block">
+              <div class="section-title">
+                <div>
+                  <h3>AIの候補一覧</h3>
+                  <div class="muted">ここにあるのは提案候補です。まだそのまま使いません</div>
+                </div>
+                <button class="subtle-btn" id="nextCaseBtn">次の症例へ</button>
+              </div>
+              <div class="candidate-list" id="candidateList"></div>
+            </section>
+
+            <section class="panel block">
+              <div class="section-title">
+                <div>
+                  <h3>監査証跡</h3>
+                  <div class="muted">候補を出したあと、何を止め、何を要確認にしたかを時系列で残します。</div>
+                </div>
+              </div>
+              <div class="audit-timeline" id="auditTimeline"></div>
+              <div class="footer-note">このデモは概念実証です。実運用では、施設ルール、添付文書、確認責任者、データ連携範囲、監査保存要件の固定が必要です。</div>
+            </section>
+          </div>
+
+          <div class="stack">
+            <section class="panel block">
+              <div class="section-title">
+                <div>
+                  <h3>ADIC 安全チェック</h3>
+                  <div class="muted">選んだ候補を、そのまま通してよいか確認します。</div>
+                </div>
+                <span id="selectedStatus" class="status-badge review">REVIEW</span>
+              </div>
+              <div id="selectedHeader" style="margin-bottom:12px;"></div>
+              <div class="reason-grid" id="reasonGrid"></div>
+              <div class="action-row">
+                <button class="primary" id="releaseDecisionBtn">判定を監査ログへ記録</button>
+                <button class="subtle-btn" id="showBestBtn">いちばん安全な候補を見る</button>
+              </div>
+              <details class="mini-note">
+                <summary></summary>
+                <div class="mini-note-body">
+                   このデモは UI と判断フローの概念実証です。<br>
+                  「安全チェックを実行」は、現在表示中の判定結果を集計してログに反映します。<br>
+                  「いちばん安全な候補を見る」は、PASS 候補の中から代表的な候補を表示します。
+                </div>
+              </details>              
+            </section>
+
+            <section class="panel block">
+              <div class="section-title">
+                <div>
+                  <h3>このデモが示す基盤構造</h3>
+                  <div class="muted">「候補提示AI」ではなく、「解放条件(＝そのまま通してよいか)を固定する医療AI基盤」</div>
+                </div>
+              </div>
+              <div class="diagram">
+                <div class="diagram-box">
+                  <strong>Candidate Generation</strong>
+                  症状、既往、検査値、薬歴から候補を提示する。ただしこの段階ではまだ解放しない。
+                </div>
+                <div class="diagram-box">
+                  <strong>Release Gate</strong>
+                  禁忌、相互作用、腎機能、妊娠可能性、アレルギー、情報欠落を評価し、前進可否を固定する。
+                </div>
+                <div class="diagram-box">
+                  <strong>Clinical Accountability</strong>
+                  誰が、何を根拠に、どの未確定条件を残したまま止めたか/前進させたかを監査可能な形で残す。
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const scenarios = [
+      {
+        id: 'renal-anticoag',
+        name: '症例A：腎機能低下＋抗凝固薬候補',
+        subtitle: '高齢で腎機能も低下。AIが候補を出しても、そのまま通してはいけない症例。',
+        facts: ['78歳', 'eGFR 24', '心房細動', '転倒歴あり', 'NSAIDs内服中', '消化管出血既往なし'],
+        timelineBase: [
+          ['09:12:03', 'Clinical Copilot', '心房細動管理として 3 候補を提示。まだオーダー候補ではなく「提案」段階。'],
+          ['09:12:09', 'ADIC Input Lock', '年齢、eGFR、併用薬、転倒歴を固定。欠損なし。'],
+          ['09:12:13', 'Release Gate', '候補ごとに禁忌・腎機能・相互作用・出血リスクを機械判定。']
+        ],
+        candidates: [
+          {
+            id: 'a1',
+            title: 'アピキサバン標準量',
+            summary: '脳塞栓予防の候補',
+            confidence: 86,
+            status: 'REVIEW',
+            rationale: '適応方向は妥当だが、高齢・腎機能低下・転倒歴を踏まえた再確認が必要。',
+            checks: [
+              ['禁忌', 'PASS', '明確な絶対禁忌情報は検出されていません。'],
+              ['腎機能', 'REVIEW', 'eGFR 24。用量・適応の再確認が必要です。'],
+              ['併用薬', 'REVIEW', 'NSAIDs併用で出血リスク上昇。薬剤師/医師レビュー推奨。'],
+              ['アレルギー', 'PASS', '既知の薬剤アレルギー情報なし。'],
+              ['用量条件', 'REVIEW', '標準量のまま解放するには条件再確認が必要。'],
+              ['根拠可視化', 'PASS', '判定理由を表示可能。独立レビュー可能。']
+            ]
+          },
+          {
+            id: 'a2',
+            title: 'リバーロキサバン通常候補',
+            summary: '服薬負担の軽さを重視した候補',
+            confidence: 79,
+            status: 'BLOCK',
+            rationale: '腎機能と出血リスクを踏まえ、このまま前進させるのは危険。',
+            checks: [
+              ['禁忌', 'PASS', '絶対禁忌は明示されていません。'],
+              ['腎機能', 'BLOCK', 'eGFR 24。候補解放前に強い制限。'],
+              ['併用薬', 'BLOCK', 'NSAIDs併用で出血リスク増大。'],
+              ['アレルギー', 'PASS', '既知アレルギーなし。'],
+              ['用量条件', 'BLOCK', '通常候補のままでは解放不可。'],
+              ['根拠可視化', 'PASS', '阻止理由を明示可能。']
+            ]
+          },
+          {
+            id: 'a3',
+            title: 'ヘパリン系へ切替相談 + 専門レビュー',
+            summary: '専門確認を先に行う安全寄りの候補',
+            confidence: 72,
+            status: 'PASS',
+            rationale: 'すぐに危険なオーダーを通さず、専門レビューに戻す経路として最も安全。',
+            checks: [
+              ['禁忌', 'PASS', 'この提案自体は危険オーダーを直接解放しません。'],
+              ['腎機能', 'PASS', '腎機能低下患者で慎重路線として整合。'],
+              ['併用薬', 'PASS', '現行併用薬との衝突を回避。'],
+              ['アレルギー', 'PASS', '新規危険因子なし。'],
+              ['用量条件', 'PASS', '具体投与量を自動解放しない。'],
+              ['根拠可視化', 'PASS', 'レビュー理由をそのまま監査に残せる。']
+            ]
+          }
+        ]
+      },
+      {
+        id: 'pregnancy-infection',
+        name: '症例B：妊娠可能性あり＋感染症候補薬',
+        subtitle: '妊娠可能性とアレルギー情報が未確認。止める理由が分かりやすい症例。',
+        facts: ['32歳', '妊娠可能性あり', '発熱・咽頭痛', 'ペニシリン発疹歴?', '腎機能正常', '体重 52kg'],
+        timelineBase: [
+          ['14:05:22', 'Clinical Copilot', '外来感染症対応として抗菌薬候補を提示。'],
+          ['14:05:28', 'ADIC Input Lock', '妊娠可能性とアレルギー歴が未確定であることをフラグ化。'],
+          ['14:05:31', 'Release Gate', '妊娠関連注意・アレルギー確認・代替候補を判定。']
+        ],
+        candidates: [
+          {
+            id: 'b1',
+            title: 'レボフロキサシン候補',
+            summary: '広めのカバーを意図した候補',
+            confidence: 74,
+            status: 'BLOCK',
+            rationale: '妊娠可能性が残る段階で、このまま自動解放すべきではない。',
+            checks: [
+              ['禁忌', 'PASS', '絶対禁忌としては未確定。'],
+              ['妊娠関連', 'BLOCK', '妊娠可能性が未確定のため自動解放不可。'],
+              ['アレルギー', 'REVIEW', 'ペニシリン発疹歴は別系統だが、薬歴確認必要。'],
+              ['腎機能', 'PASS', '腎機能条件は大きな制限なし。'],
+              ['用量条件', 'PASS', '用量設計自体は可能。'],
+              ['根拠可視化', 'PASS', '危険理由を表示可能。']
+            ]
+          },
+          {
+            id: 'b2',
+            title: 'アモキシシリン/クラブラン酸候補',
+            summary: 'ガイドラインで一般的な選択肢として提示',
+            confidence: 84,
+            status: 'REVIEW',
+            rationale: '方向性は妥当だが、ペニシリン発疹歴の確認なしに通すのは危険。',
+            checks: [
+              ['禁忌', 'REVIEW', '過去の発疹歴の性質確認が必要。'],
+              ['妊娠関連', 'PASS', '妊娠可能性の観点では比較的整合。'],
+              ['アレルギー', 'REVIEW', '真の即時型反応か不明。'],
+              ['腎機能', 'PASS', '腎機能制限なし。'],
+              ['用量条件', 'PASS', '標準的設計が可能。'],
+              ['根拠可視化', 'PASS', '確認不足点を明示可能。']
+            ]
+          },
+          {
+            id: 'b3',
+            title: '検査・薬歴確認後に再提案',
+            summary: '薬歴・妊娠確認を先に行う安全ルート',
+            confidence: 69,
+            status: 'PASS',
+            rationale: '急性重症感が乏しいなら、危険条件を先に埋める方が安全。',
+            checks: [
+              ['禁忌', 'PASS', '危険な薬剤をすぐ解放しない。'],
+              ['妊娠関連', 'PASS', '未確定情報を先に解消する設計。'],
+              ['アレルギー', 'PASS', '薬歴確認を優先する。'],
+              ['腎機能', 'PASS', '制約なし。'],
+              ['用量条件', 'PASS', 'まだ具体投与に進めない。'],
+              ['根拠可視化', 'PASS', 'なぜ止めたかを説明しやすい。']
+            ]
+          }
+        ]
+      },
+      {
+        id: 'polypharmacy-elderly',
+        name: '症例C：多剤併用高齢者＋鎮静リスク',
+        subtitle: '便利そうな提案でも、転倒やせん妄の危険があれば止めるべき症例。',
+        facts: ['84歳', '不眠訴え', 'ベンゾ系既使用', '夜間転倒歴あり', '軽度認知障害', '家族同伴'],
+        timelineBase: [
+          ['21:41:10', 'Clinical Copilot', '不眠に対する薬剤候補と非薬物介入候補を提示。'],
+          ['21:41:16', 'ADIC Input Lock', '年齢、転倒歴、既存ベンゾ、認知機能低下を固定。'],
+          ['21:41:20', 'Release Gate', '鎮静、転倒、せん妄、重複投与を判定。']
+        ],
+        candidates: [
+          {
+            id: 'c1',
+            title: 'ベンゾジアゼピン追加処方',
+            summary: '即効性を重視した候補',
+            confidence: 66,
+            status: 'BLOCK',
+            rationale: '高齢・転倒歴・既存ベンゾ内服あり。追加解放は危険。',
+            checks: [
+              ['禁忌', 'PASS', '絶対禁忌情報そのものはなし。'],
+              ['転倒リスク', 'BLOCK', '夜間転倒歴あり。追加鎮静は危険。'],
+              ['重複投与', 'BLOCK', '既存ベンゾ系との重複懸念。'],
+              ['認知機能', 'BLOCK', 'せん妄/認知悪化リスク。'],
+              ['用量条件', 'BLOCK', '自動解放不可。'],
+              ['根拠可視化', 'PASS', '阻止理由を明示可能。']
+            ]
+          },
+          {
+            id: 'c2',
+            title: 'メラトニン受容体系候補',
+            summary: '比較的安全な薬剤候補',
+            confidence: 81,
+            status: 'REVIEW',
+            rationale: '薬剤としては相対的に安全だが、睡眠衛生・環境要因の確認も必要。',
+            checks: [
+              ['禁忌', 'PASS', '明確な絶対禁忌なし。'],
+              ['転倒リスク', 'REVIEW', '相対的には低いが、夜間動線確認必要。'],
+              ['重複投与', 'PASS', '既存ベンゾとの直接重複は少ない。'],
+              ['認知機能', 'REVIEW', '家族同席下での経過観察推奨。'],
+              ['用量条件', 'PASS', '低用量設計可能。'],
+              ['根拠可視化', 'PASS', '確認ポイントを表示可能。']
+            ]
+          },
+          {
+            id: 'c3',
+            title: '非薬物介入 + 既存薬見直し',
+            summary: '睡眠衛生と既存薬整理を優先',
+            confidence: 77,
+            status: 'PASS',
+            rationale: '安全側に寄せつつ、今の問題構造に最も合う。',
+            checks: [
+              ['禁忌', 'PASS', '危険な新規鎮静薬を解放しない。'],
+              ['転倒リスク', 'PASS', '新規転倒リスクを増やさない。'],
+              ['重複投与', 'PASS', '多剤併用悪化を避ける。'],
+              ['認知機能', 'PASS', '認知悪化リスクを抑える。'],
+              ['用量条件', 'PASS', '薬剤解放を急がない。'],
+              ['根拠可視化', 'PASS', '家族説明にも使いやすい。']
+            ]
+          }
+        ]
+      }
+    ];
+
+    const caseListEl = document.getElementById('caseList');
+    const patientTitleEl = document.getElementById('patientTitle');
+    const patientSubtitleEl = document.getElementById('patientSubtitle');
+    const patientFactsEl = document.getElementById('patientFacts');
+    const candidateListEl = document.getElementById('candidateList');
+    const auditTimelineEl = document.getElementById('auditTimeline');
+    const reasonGridEl = document.getElementById('reasonGrid');
+    const selectedHeaderEl = document.getElementById('selectedHeader');
+    const selectedStatusEl = document.getElementById('selectedStatus');
+    const metricCandidatesEl = document.getElementById('metricCandidates');
+    const metricPassEl = document.getElementById('metricPass');
+    const metricBlockEl = document.getElementById('metricBlock');
+    const metricReviewEl = document.getElementById('metricReview');
+
+    let currentCaseIndex = 0;
+    let selectedCandidateId = null;
+    let logs = [];
+
+    function clone(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    function statusClass(status) {
+      if (status === 'PASS') return 'pass';
+      if (status === 'BLOCK') return 'block-badge';
+      return 'review';
+    }
+
+    function miniTagClass(status) {
+      if (status === 'PASS') return 'ok-tag';
+      if (status === 'BLOCK') return 'bad-tag';
+      return 'warn-tag';
+    }
+
+    function renderCaseButtons() {
+      caseListEl.innerHTML = '';
+      scenarios.forEach((s, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'case-btn' + (idx === currentCaseIndex ? ' active' : '');
+        btn.innerHTML = `<span class="name">${s.name}</span><span class="muted">${s.subtitle}</span>`;
+        btn.addEventListener('click', () => {
+          currentCaseIndex = idx;
+          loadScenario();
+        });
+        caseListEl.appendChild(btn);
+      });
+    }
+
+    function getScenario() {
+      return clone(scenarios[currentCaseIndex]);
+    }
+
+    let currentScenario = getScenario();
+
+    function loadScenario() {
+      currentScenario = getScenario();
+      selectedCandidateId = currentScenario.candidates[0].id;
+      logs = clone(currentScenario.timelineBase);
+      renderCaseButtons();
+      renderTop();
+      renderCandidates();
+      renderSelected();
+      renderAudit();
+    }
+
+    function renderTop() {
+      patientTitleEl.textContent = currentScenario.name;
+      patientSubtitleEl.textContent = currentScenario.subtitle;
+      patientFactsEl.innerHTML = currentScenario.facts.map(f => `<span class="pill">${f}</span>`).join('');
+      const counts = countStatuses();
+      metricCandidatesEl.textContent = currentScenario.candidates.length;
+      metricPassEl.textContent = counts.PASS;
+      metricBlockEl.textContent = counts.BLOCK;
+      metricReviewEl.textContent = counts.REVIEW;
+    }
+
+    function countStatuses() {
+      return currentScenario.candidates.reduce((acc, c) => {
+        acc[c.status] = (acc[c.status] || 0) + 1;
+        return acc;
+      }, { PASS: 0, BLOCK: 0, REVIEW: 0 });
+    }
+
+    function renderCandidates() {
+      candidateListEl.innerHTML = '';
+      currentScenario.candidates.forEach(candidate => {
+        const div = document.createElement('div');
+        div.className = 'candidate' + (candidate.id === selectedCandidateId ? ' selected' : '');
+        div.innerHTML = `
+          <div class="candidate-top">
+            <div>
+              <div class="candidate-title">${candidate.title}</div>
+              <div class="candidate-sub">${candidate.summary}</div>
+            </div>
+            <div class="score">
+              <div class="n">${candidate.confidence}</div>
+              <div class="s">proposal score</div>
+            </div>
+          </div>
+          <div class="pill-row">
+            <span class="status-badge ${statusClass(candidate.status)}">${candidate.status}</span>
+            <span class="pill">${candidate.rationale}</span>
+          </div>
+        `;
+        div.addEventListener('click', () => {
+          selectedCandidateId = candidate.id;
+          renderCandidates();
+          renderSelected();
+        });
+        candidateListEl.appendChild(div);
+      });
+    }
+
+    function selectedCandidate() {
+      return currentScenario.candidates.find(c => c.id === selectedCandidateId);
+    }
+
+    function renderSelected() {
+      const c = selectedCandidate();
+      selectedHeaderEl.innerHTML = `
+        <div style="font-size:18px;font-weight:800;margin-bottom:4px;">${c.title}</div>
+        <div class="muted">${c.summary}</div>
+        <div style="margin-top:10px;" class="pill-row">
+          <span class="pill">${c.rationale}</span>
+        </div>
+      `;
+      selectedStatusEl.className = 'status-badge ' + statusClass(c.status);
+      selectedStatusEl.textContent = c.status;
+      reasonGridEl.innerHTML = c.checks.map(([name, state, text]) => `
+        <div class="gate-check">
+          <h4>${name}<span class="mini-tag ${miniTagClass(state)}">${state}</span></h4>
+          <p>${text}</p>
+        </div>
+      `).join('');
+    }
+
+    function renderAudit() {
+      auditTimelineEl.innerHTML = logs.map(([time, title, body]) => `
+        <div class="audit-item">
+          <div class="audit-time">${time}</div>
+          <div class="audit-body"><strong>${title}</strong><div>${body}</div></div>
+        </div>
+      `).join('');
+    }
+
+    function timestamp() {
+      const d = new Date();
+      return d.toLocaleTimeString('ja-JP', { hour12: false });
+    }
+
+    function runGateSummary() {
+      const counts = countStatuses();
+      logs.push([
+        timestamp(),
+        'Release Gate Summary',
+        `PASS ${counts.PASS}件 / BLOCK ${counts.BLOCK}件 / REVIEW ${counts.REVIEW}件。候補提示と候補解放を分離し、未通過候補の自動前進を防止しました。`
+      ]);
+      renderAudit();
+    }
+
+    function logSelectedDecision() {
+      const c = selectedCandidate();
+      let message = `${c.title} を ${c.status} として監査記録化。`;
+      if (c.status === 'PASS') message += ' 解放条件を通過した候補として前進可能。最終判断責任は臨床側が保持します。';
+      if (c.status === 'BLOCK') message += ' 危険条件または禁止条件に抵触したため、自動解放しません。';
+      if (c.status === 'REVIEW') message += ' 確認未了条件が残るため、解放せず人手確認へ戻します。';
+      logs.push([timestamp(), 'Decision Log', message]);
+      renderAudit();
+    }
+
+    function selectBestSafe() {
+      const best = currentScenario.candidates.find(c => c.status === 'PASS') || currentScenario.candidates.find(c => c.status === 'REVIEW');
+      if (!best) return;
+      selectedCandidateId = best.id;
+      renderCandidates();
+      renderSelected();
+      logs.push([timestamp(), 'Safe Path Hint', `最安全候補として ${best.title} を前面表示。`]);
+      renderAudit();
+    }
+
+    document.getElementById('runGateBtn').addEventListener('click', runGateSummary);
+    document.getElementById('releaseDecisionBtn').addEventListener('click', logSelectedDecision);
+    document.getElementById('showBestBtn').addEventListener('click', selectBestSafe);
+    document.getElementById('nextCaseBtn').addEventListener('click', () => {
+      currentCaseIndex = (currentCaseIndex + 1) % scenarios.length;
+      loadScenario();
+    });
+
+    loadScenario();
+  </script>
+</body>
+</html>
